@@ -84,7 +84,7 @@ func RegisterWebhooks(mgr manager.Manager) error {
 
 	// Register monitoring injector webhook
 	monitoringInjector := &monitoringwebhook.Injector{
-		Client:  mgr.GetAPIReader(),
+		Client:  mgr.GetClient(),
 		Decoder: admission.NewDecoder(mgr.GetScheme()),
 		Name:    "monitoring-injector",
 	}
