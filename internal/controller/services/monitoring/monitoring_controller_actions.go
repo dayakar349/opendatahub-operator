@@ -216,6 +216,22 @@ func deployMonitoringStackWithQuerierAndRestrictions(ctx context.Context, rr *od
 	if monitoring.Spec.Metrics == nil {
 		setConditionFalse(rr, status.ConditionMonitoringStackAvailable, status.MetricsNotConfiguredReason, status.MetricsNotConfiguredMessage)
 		setConditionFalse(rr, status.ConditionThanosQuerierAvailable, status.MetricsNotConfiguredReason, status.MetricsNotConfiguredMessage)
+
+		// Explicitly delete ThanosQuerier when metrics are disabled
+		// The cluster-observability-operator does not delete ThanosQuerier when the Monitoring CR
+		// still exists but metrics are simply disabled (it only handles cascade deletion when the
+		// Monitoring CR itself is deleted). We need to explicitly delete it here.
+		thanosQuerier := &unstructured.Unstructured{}
+		thanosQuerier.SetGroupVersionKind(gvk.ThanosQuerier)
+		thanosQuerier.SetName("data-science-thanos-querier")
+		thanosQuerier.SetNamespace(monitoring.Namespace)
+
+		if err := rr.Client.Delete(ctx, thanosQuerier); err != nil {
+			if !k8serr.IsNotFound(err) {
+				return fmt.Errorf("failed to delete ThanosQuerier: %w", err)
+			}
+		}
+
 		return nil
 	}
 

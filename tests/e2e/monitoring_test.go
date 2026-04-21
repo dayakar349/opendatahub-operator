@@ -1439,9 +1439,10 @@ func (tc *MonitoringTestCtx) setupTraces(t *testing.T, backend, secretName strin
 
 // cleanupGroup performs group-level cleanup, resetting monitoring to a clean state.
 // This is intended to be used with t.Cleanup() for deferred execution.
+// Note: t.Helper() is intentionally not called here because this function is registered
+// with t.Cleanup(), and calling t.Helper() from a cleanup function that may call t.Fatal()
+// (via Gomega) violates Go testing rules and causes a panic.
 func (tc *MonitoringTestCtx) cleanupGroup(t *testing.T, secretName string) {
-	t.Helper()
-
 	// Reset monitoring configuration to Managed (no metrics, no traces)
 	tc.resetMonitoringConfigToManaged()
 
